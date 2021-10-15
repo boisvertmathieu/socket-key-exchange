@@ -136,7 +136,9 @@ def generate_mod_base(destination: socket.socket) -> Optional[Tuple[int, int]]:
     modulo = trouver_nombre_premier()
     base = entier_aleatoire(modulo)
 
-    send_msg(destination, "%s, %s".format(str(modulo), str(base)))
+    strTuple = str(modulo) + "," + str(base)
+
+    send_msg(destination, strTuple)
 
     return (modulo, base)
 
@@ -205,12 +207,21 @@ def server(port: int, est_ipv6: bool) -> NoReturn:
     """
     socket_serveur = make_server_socket(port, est_ipv6)
 
-    (socket_client, adresse_client) = socket_serveur.accept()
-    print("SERVEUR - Connection d'un client depuis l'adresse {}".format(adresse_client))
-
     while True:
-        generate_mod_base(socket_client)
-        print(recv_msg(socket_client))
+        (socket_client, adresse_client) = socket_serveur.accept()
+        print(
+            "SERVEUR - Connection d'un client depuis l'adresse {}".format(
+                adresse_client
+            )
+        )
+
+        tupl = generate_mod_base(socket_client)
+        print("SERVEUR - Données envoyé au client : {}".format(tupl))
+
+        print("SERVEUR - {}".format(recv_msg(socket_client)))
+        send_msg(socket_client, "Bien reçu")
+
+        socket_client.close()
 
 
 def client(destination: str, port: int, est_ipv6: bool) -> None:
@@ -221,12 +232,15 @@ def client(destination: str, port: int, est_ipv6: bool) -> None:
     """
     socket_client = make_client_socket(destination, port, est_ipv6)
 
-    (modulo, base) = fetch_mod_base(destination)
-    print("CLIENT - Reçu modulo et base : {}, {}".format(modulo, base))
+    tupl = fetch_mod_base(socket_client)
+    print("CLIENT - Reçu modulo et base : {}".format(tupl))
 
     send_msg(socket_client, "Merci. -client")
 
-    print(recv_msg(socket_client))
+    message = recv_msg(socket_client)
+    print("CLIENT - {}".format(message))
+
+    socket_client.close()
 
 
 def main() -> None:
