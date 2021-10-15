@@ -167,8 +167,8 @@ def generate_pub_prv_keys(modulo: int, base: int) -> Tuple[int, int]:
         1. la clé privée
         2. la clé publique
     """
-    cle_privee = entier_aleatoire(int(modulo))
-    cle_publique = exponentiation_modulaire(int(base), cle_privee, int(modulo))
+    cle_privee = entier_aleatoire(modulo)
+    cle_publique = exponentiation_modulaire(base, cle_privee, modulo)
 
     return (cle_privee, cle_publique)
 
@@ -216,11 +216,16 @@ def server(port: int, est_ipv6: bool) -> NoReturn:
         )
 
         tupl = generate_mod_base(socket_client)
+        modulo = int(tupl[0])
+        base = int(tupl[1])
         print("SERVEUR - Données envoyé au client : {}".format(tupl))
 
-        (cle_privee, cle_publique) = generate_pub_prv_keys(tupl[0], tupl[1])
-        cle_publique_client = exchange_keys(socket_client, int(cle_publique))
-        cle_partagee = compute_shared_key(tupl[0], cle_privee, cle_publique_client)
+        (cle_privee, cle_publique) = generate_pub_prv_keys(modulo, base)
+
+        cle_publique_client = exchange_keys(socket_client, cle_publique)
+        cle_partagee = compute_shared_key(
+            modulo, int(cle_privee), int(cle_publique_client)
+        )
         print("SERVEUR - Clé partagé généré : {}".format(cle_partagee))
 
         socket_client.close()
@@ -235,12 +240,16 @@ def client(destination: str, port: int, est_ipv6: bool) -> None:
     socket_client = make_client_socket(destination, port, est_ipv6)
 
     tupl = tuple(fetch_mod_base(socket_client).split(","))
+    modulo = int(tupl[0])
+    base = int(tupl[1])
     print("CLIENT - Reçu modulo et base : {}".format(tupl))
 
-    (cle_privee, cle_publique) = generate_pub_prv_keys(tupl[0], tupl[1])
-    cle_publique_serveur = recv_msg(socket_client)
+    (cle_privee, cle_publique) = generate_pub_prv_keys(modulo, base)
+
+    cle_publique_serveur = int(recv_msg(socket_client))
     send_msg(socket_client, str(cle_publique))
-    cle_partagee = compute_shared_key(tupl[0], cle_privee, cle_publique_serveur)
+
+    cle_partagee = compute_shared_key(modulo, cle_privee, cle_publique_serveur)
     print("CLIENT - Clé partagé généré : {}".format(cle_partagee))
 
     socket_client.close()
