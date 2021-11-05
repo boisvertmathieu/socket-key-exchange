@@ -1,8 +1,5 @@
 """\
-Module fournissant les fonctions cryptographiques pour le TP3
-
-Attention : en cryptographie, les nombres doivent être impossibles à deviner, 
-ce qui n’est pas le cas ici. N’utilisez pas ce module dans un projet réel !
+Module fournissant des fonctions cryptographiques 
 """
 import random
 

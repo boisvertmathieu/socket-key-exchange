@@ -6,16 +6,6 @@ from glosocket import *
 
 
 def get_arguments() -> Tuple[bool, bool, int, Optional[str]]:
-    """
-    Cette fonction doit :
-    - ajouter les arguments attendus aux parser,
-    - récupérer les arguments passés,
-    - retourner un tuple contenant dans cet ordre :
-        1. est-ce que le protocole est IPv6 ? (Booléen)
-        2. est-ce que le mode est « écoute » ? (Booléen)
-        3. le port choisi (entier)
-        4. l’adresse du serveur (string si client, None si serveur)
-    """
     parser = argparse.ArgumentParser()
 
     # Argument pour le protocol (ipv4 ou ipv6)
@@ -74,12 +64,6 @@ def get_arguments() -> Tuple[bool, bool, int, Optional[str]]:
 
 
 def make_server_socket(port: int, est_ipv6: bool) -> socket.socket:
-    """
-    Cette fonction doit créer le socket du serveur, le lier au port
-    et démarrer l’écoute.
-
-    Si le port est invalide ou indisponible, le programme termine.
-    """
     socket_serveur = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     socket_serveur.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -100,11 +84,6 @@ def make_server_socket(port: int, est_ipv6: bool) -> socket.socket:
 
 
 def make_client_socket(destination: str, port: int, est_ipv6: bool) -> socket.socket:
-    """
-    Cette fonction doit créer le socket du client et le connecter au serveur.
-
-    Si la connexion échoue, le programme termine.
-    """
     adresse = (destination, port)
 
     socket_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -124,15 +103,6 @@ def make_client_socket(destination: str, port: int, est_ipv6: bool) -> socket.so
 
 
 def generate_mod_base(destination: socket.socket) -> Optional[Tuple[int, int]]:
-    """
-    Cette fonction doit :
-    - à l’aide du module glocrypto, générer le modulo et la base,
-    - à l’aide du module glosocket, transmettre à la destination
-    deux messages contenant respectivement :
-        1. le modulo
-        2. la base
-    - retourner un tuple contenant les deux valeurs dans ce même ordre.
-    """
     modulo = trouver_nombre_premier()
     base = entier_aleatoire(modulo)
 
@@ -144,29 +114,10 @@ def generate_mod_base(destination: socket.socket) -> Optional[Tuple[int, int]]:
 
 
 def fetch_mod_base(source: socket.socket) -> Tuple[int, int]:
-    """
-    Cette fonction doit :
-    - à l’aide du module glosocket, recevoir depuis la source
-    deux messages contenant respectivement :
-        1. le modulo
-        2. la base
-    - retourner un tuple contenant les deux valeurs dans ce même ordre.
-
-    Si l’une des réceptions échoue, le programme termine.
-    """
-
     return recv_msg(source)
 
 
 def generate_pub_prv_keys(modulo: int, base: int) -> Tuple[int, int]:
-    """
-    Cette fonction doit :
-    - à l’aide du module glocrypto, générer une clé privée,
-    - à l’aide du module glocrypto, générer une clé publique,
-    - retourner un tuple contenant respectivement :
-        1. la clé privée
-        2. la clé publique
-    """
     cle_privee = entier_aleatoire(modulo)
     cle_publique = exponentiation_modulaire(base, cle_privee, modulo)
 
@@ -174,14 +125,6 @@ def generate_pub_prv_keys(modulo: int, base: int) -> Tuple[int, int]:
 
 
 def exchange_keys(destination: socket.socket, cle_pub: int) -> Optional[int]:
-    """
-    Cette fonction doit respectivement :
-    1. à l’aide du module glosocket, envoyer sa clé publique à la destination,
-    2. à l’aide du module glosocket, recevoir la clé publique de la destination
-
-    Si l’envoi ou la réception échoue, la fonction retourne None.
-    """
-
     try:
         send_msg(destination, str(cle_pub))
         return recv_msg(destination)
@@ -191,20 +134,10 @@ def exchange_keys(destination: socket.socket, cle_pub: int) -> Optional[int]:
 
 
 def compute_shared_key(modulo: int, cle_prv: int, cle_pub: int) -> int:
-    """
-    Cette fonction doit, à l’aide du module glocrypto, déduire la clé partagée.
-    """
-
     return exponentiation_modulaire(cle_pub, cle_prv, modulo)
 
 
 def server(port: int, est_ipv6: bool) -> NoReturn:
-    """
-    Cette fonction constitue le point d’entrée et la boucle principale du serveur.
-
-    Si la connexion à un client est interrompue, le serveur abandonne ce client
-    et en attend un nouveau.
-    """
     socket_serveur = make_server_socket(port, est_ipv6)
 
     while True:
@@ -232,11 +165,6 @@ def server(port: int, est_ipv6: bool) -> NoReturn:
 
 
 def client(destination: str, port: int, est_ipv6: bool) -> None:
-    """
-    Cette fonction constitue le point d’entrée et la boucle principale du client.
-
-    Si la connexion au serveur est interrompue, le client termine.
-    """
     socket_client = make_client_socket(destination, port, est_ipv6)
 
     tupl = tuple(fetch_mod_base(socket_client).split(","))
